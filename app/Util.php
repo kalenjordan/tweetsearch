@@ -19,6 +19,11 @@ class Util
         return env('APP_NAME');
     }
 
+    public static function twitterUsername()
+    {
+        return env('TWITTER_USERNAME');
+    }
+
     public static function svgLogo()
     {
         return env('LOGO_SVG');

@@ -68,21 +68,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="hidden md:block">
-                            <a href="#link1" class="font-medium text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out">
-                                Link 1
-                            </a>
-                            <a href="#link2" class="ml-10 font-medium text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out">
-                                Link 2
-                            </a>
-                            <a href="javascript://" @click="toggleSearch" v-shortkey="['/']" @shortkey="toggleSearch"
-                               class="ml-10 font-medium text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out">
-                                Search
-                            </a>
-                            <a href="#" class="ml-10 font-medium text-indigo-500 hover:text-indigo-900 focus:outline-none focus:text-indigo-900 transition duration-150 ease-in-out">
-                                Call to action
-                            </a>
-                        </div>
+                        {{--<div class="hidden md:block">--}}
+                            {{--<a href="javascript://" @click="toggleSearch" v-shortkey="['/']" @shortkey="toggleSearch"--}}
+                               {{--class="font-medium text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out">--}}
+                                {{--Search--}}
+                            {{--</a>--}}
+                            {{--<a href="https://github.com/kalenjordan/tweetsearch" class="ml-10 font-medium text-indigo-500 hover:text-indigo-900 focus:outline-none focus:text-indigo-900 transition duration-150 ease-in-out">--}}
+                                {{--Download--}}
+                            {{--</a>--}}
+                        {{--</div>--}}
                         <div class="hidden z-10 md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0">
                             @if (isset($user) && $user)
                                 <span class="inline-flex">

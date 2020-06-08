@@ -9,12 +9,14 @@ use App\Blog;
 use App\User;
 use App\Util;
 use Illuminate\Console\Command;
+use JsonStreamingParser\Listener\JsonListener;
 
 class AlgoliaIndex extends Command
 {
 
     /** @var SearchIndex */
     protected $index;
+    protected $currentTweetNumber = 1;
 
     /**
      * The name and signature of the console command.
@@ -79,6 +81,10 @@ class AlgoliaIndex extends Command
             $this->_indexPages();
         }
 
+        if ($this->shouldIndex('tweets')) {
+            $this->_indexTweets();
+        }
+
         return;
     }
 
@@ -132,5 +138,52 @@ class AlgoliaIndex extends Command
                 'objectIDKey' => 'object_id',
             ]);
         }
+    }
+
+    /**
+     * @throws \Algolia\AlgoliaSearch\Exceptions\MissingObjectId
+     * @throws \Exception
+     */
+    protected function _indexTweets()
+    {
+        $this->info("Indexing tweets");
+
+        try {
+            $testfile = storage_path('app/tweet.js');
+        } catch (\Exception $e) {
+            $this->error("Didn't find file: " . storage_path('app/tweet.js'));
+        }
+
+        $listener = new \App\JsonListener(function($data) {
+            $i = $this->currentTweetNumber;
+            $this->info(" - Tweet ({$data['id']}) #$i: " . $data['full_text']);
+
+            $object = [];
+            $object['object_id'] = 'tweet_' . $data['id'];
+            $object['url'] = "https://twitter.com/" . Util::twitterUsername() . '/statuses/' . $data['id'];
+            $object['search_title'] = "Tweet: " . $data['full_text'];
+            $object['type'] = 'tweet';
+            $object['public'] = true;
+
+            $this->index->saveObjects([$object], [
+                'objectIDKey' => 'object_id',
+            ]);
+
+            $this->currentTweetNumber++;
+            if ($this->currentTweetNumber > $this->_limit()) {
+                die();
+            }
+        });
+
+        $stream = fopen($testfile, 'r');
+        try {
+            $parser = new \JsonStreamingParser\Parser($stream, $listener);
+            $parser->parse();
+            fclose($stream);
+        } catch (\Exception $e) {
+            fclose($stream);
+            throw $e;
+        }
+
     }
 }
