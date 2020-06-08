@@ -6,6 +6,7 @@ use Algolia\AlgoliaSearch\SearchClient;
 use Algolia\AlgoliaSearch\SearchIndex;
 use App\Airtable;
 use App\Blog;
+use App\Twitter;
 use App\User;
 use App\Util;
 use Illuminate\Console\Command;
@@ -81,7 +82,13 @@ class AlgoliaIndex extends Command
             $this->_indexPages();
         }
 
+        if ($this->shouldIndex('twitter-download')) {
+            $this->currentTweetNumber = 1;
+            $this->_indexDownloadedTwitterData();
+        }
+
         if ($this->shouldIndex('tweets')) {
+            $this->currentTweetNumber = 1;
             $this->_indexTweets();
         }
 
@@ -146,7 +153,34 @@ class AlgoliaIndex extends Command
      */
     protected function _indexTweets()
     {
-        $this->info("Indexing tweets");
+        $tweets = Twitter::tweets(Util::twitterUsername(), $this->_limit());
+
+        $this->info("Indexing " . count($tweets) . " tweets");
+        foreach ($tweets as $tweet) {
+            $object = [];
+            $object['object_id'] = 'tweet_' . $tweet->id;
+            $object['url'] = "https://twitter.com/" . Util::twitterUsername() . '/status/' . $tweet->id;
+            $object['search_title'] = "Tweet: " . $tweet->text;
+            $object['type'] = 'tweet';
+            $object['public'] = true;
+
+            $this->infoTweet($object);
+
+            $this->index->saveObjects([$object], [
+                'objectIDKey' => 'object_id',
+            ]);
+
+            $this->currentTweetNumber++;
+        }
+    }
+
+    /**
+     * @throws \Algolia\AlgoliaSearch\Exceptions\MissingObjectId
+     * @throws \Exception
+     */
+    protected function _indexDownloadedTwitterData()
+    {
+        $this->info("Indexing downloaded twitter tweets");
 
         try {
             $testfile = storage_path('app/tweet.js');
@@ -155,15 +189,14 @@ class AlgoliaIndex extends Command
         }
 
         $listener = new \App\JsonListener(function($data) {
-            $i = $this->currentTweetNumber;
-            $this->info(" - Tweet ({$data['id']}) #$i: " . $data['full_text']);
-
             $object = [];
             $object['object_id'] = 'tweet_' . $data['id'];
-            $object['url'] = "https://twitter.com/" . Util::twitterUsername() . '/statuses/' . $data['id'];
+            $object['url'] = "https://twitter.com/" . Util::twitterUsername() . '/status/' . $data['id'];
             $object['search_title'] = "Tweet: " . $data['full_text'];
             $object['type'] = 'tweet';
             $object['public'] = true;
+
+            $this->infoTweet($object);
 
             $this->index->saveObjects([$object], [
                 'objectIDKey' => 'object_id',
@@ -185,5 +218,11 @@ class AlgoliaIndex extends Command
             throw $e;
         }
 
+    }
+
+    protected function infoTweet($object)
+    {
+        $i = $this->currentTweetNumber;
+        $this->info(" - Tweet #$i ({$object['object_id']}): " . $object['search_title']);
     }
 }
