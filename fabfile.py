@@ -16,7 +16,7 @@ def printUsageAndExit():
 	print 'Example: fab deploy'
 	sys.exit(0)
 
-remoteDocumentRoot = '/home/forge/starter.kalenjordan.com'
+remoteDocumentRoot = '/home/forge/tweetsearch.kalenjordan.com'
 remoteSkinPath = remoteDocumentRoot + '/public'
 remoteSkinPathAssets = remoteDocumentRoot + '/public/assets'
 

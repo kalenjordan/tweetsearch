@@ -75,16 +75,6 @@ class AlgoliaIndex extends Command
         $this->index = $client->initIndex('all');
         $this->info("Updating Algolia search index (limit: " . $this->_limit() . ")");
 
-        if ($this->shouldIndex('blogs')) {
-            $blogs = (new Blog())->getRecords($params);
-            $this->_indexRecords($blogs, 'blogs');
-        }
-
-        if ($this->shouldIndex('users')) {
-            $users = (new User())->getRecords();
-            $this->_indexRecords($users, 'users');
-        }
-
         if ($this->shouldIndex('pages')) {
             $this->_indexPages();
         }
@@ -126,34 +116,6 @@ class AlgoliaIndex extends Command
             [
                 'url'  => '/',
                 'name' => 'Home',
-            ],
-            [
-                'url'  => '/account/settings',
-                'name' => 'Settings',
-            ],
-            [
-                'url'  => '/account/contracts',
-                'name' => 'Contracts',
-            ],
-            [
-                'url'  => '/talent',
-                'name' => 'Talent',
-            ],
-            [
-                'url'  => '/jobs',
-                'name' => 'Jobs',
-            ],
-            [
-                'url'  => '/account/talent-profile',
-                'name' => 'My Talent Profile',
-            ],
-            [
-                'url'  => '/account/client/',
-                'name' => 'My Client Profile',
-            ],
-            [
-                'url'  => '/account/client/jobs/new',
-                'name' => 'Create New Job',
             ],
         ];
 
