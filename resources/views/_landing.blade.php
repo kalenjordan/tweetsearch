@@ -111,13 +111,13 @@
                                     </div>
                                 </span>
                             @else
-                                <span class="inline-flex rounded-md shadow">
-                                    <a href="/auth"
-                                       v-shortkey="['l']" @shortkey="clickLink($event)" v-tooltip="'L key'"
-                                       class="inline-flex items-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-600 bg-white hover:text-indigo-500 focus:outline-none focus:shadow-outline-blue active:bg-gray-50 active:text-indigo-700 transition duration-150 ease-in-out">
-                                        Log in
-                                    </a>
-                                </span>
+                                {{--<span class="inline-flex rounded-md shadow">--}}
+                                    {{--<a href="/auth"--}}
+                                       {{--v-shortkey="['l']" @shortkey="clickLink($event)" v-tooltip="'L key'"--}}
+                                       {{--class="inline-flex items-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-600 bg-white hover:text-indigo-500 focus:outline-none focus:shadow-outline-blue active:bg-gray-50 active:text-indigo-700 transition duration-150 ease-in-out">--}}
+                                        {{--Log in--}}
+                                    {{--</a>--}}
+                                {{--</span>--}}
                             @endif
                         </div>
                     </nav>
@@ -191,11 +191,11 @@
                                     </a>
                                 </div>
                             @else
-                                <div>
-                                    <a href="/auth" class="block w-full px-5 py-3 text-center font-medium text-indigo-600 bg-gray-50 hover:bg-gray-100 hover:text-indigo-700 focus:outline-none focus:bg-gray-100 focus:text-indigo-700 transition duration-150 ease-in-out">
-                                        Log in
-                                    </a>
-                                </div>
+                                {{--<div>--}}
+                                    {{--<a href="/auth" class="block w-full px-5 py-3 text-center font-medium text-indigo-600 bg-gray-50 hover:bg-gray-100 hover:text-indigo-700 focus:outline-none focus:bg-gray-100 focus:text-indigo-700 transition duration-150 ease-in-out">--}}
+                                        {{--Log in--}}
+                                    {{--</a>--}}
+                                {{--</div>--}}
                             @endif
                         </div>
                     </div>
