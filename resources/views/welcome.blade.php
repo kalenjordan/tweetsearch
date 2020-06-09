@@ -16,11 +16,14 @@
             <h2 class="text-4xl tracking-tight leading-10 font-extrabold text-gray-900 sm:text-5xl sm:leading-none md:text-6xl">
                 Search your <br class='lg:hidden'/> <span class='text-indigo-600'>tweets</span>
             </h2>
+            <p class="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+                See a demo of the search functionality which searches Paul Graham's tweets.
+            </p>
             <div class="my-5 max-w-md mx-auto sm:flex sm:justify-center md:my-8">
                 <div class="rounded-md shadow">
                     <a href="javascript://" @click="toggleSearch" v-shortkey="['/']" @shortkey="toggleSearch"
                         class="bg-indigo-600 hover:bg-indigo-500 focus:shadow-outline-indigo focus:outline-none  w-full flex items-center justify-center px-8 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10">
-                        Search
+                        Demo Search
                     </a>
                 </div>
                 <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">

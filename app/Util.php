@@ -24,6 +24,11 @@ class Util
         return env('TWITTER_USERNAME');
     }
 
+    public static function lastTweetId()
+    {
+        return env('TWITTER_LAST_TWEET_ID');
+    }
+
     public static function svgLogo()
     {
         return env('LOGO_SVG');

@@ -24,7 +24,7 @@ class AlgoliaIndex extends Command
      *
      * @var string
      */
-    protected $signature = 'algolia:index {--limit=} {--v} {--tables=}';
+    protected $signature = 'algolia:index {--limit=} {--v} {--tables=} {--incremental}';
 
     /**
      * The console command description.
@@ -48,6 +48,11 @@ class AlgoliaIndex extends Command
         return $this->option('limit') ? $this->option('limit') : 5;
     }
 
+    protected function _doIncremental()
+    {
+        return $this->option('incremental') ? $this->option('incremental') : false;
+    }
+
     protected function _tables()
     {
         return $this->option('tables') ? explode(',', $this->option('tables')) : null;
@@ -69,11 +74,6 @@ class AlgoliaIndex extends Command
      */
     public function handle()
     {
-        $params = array(
-            "sort"       => [['field' => 'Published', 'direction' => "desc"]],
-            "maxRecords" => $this->_limit(),
-        );
-
         $client = SearchClient::create(Util::algoliaAppId(), Util::algoliaPrivateKey());
         $this->index = $client->initIndex('all');
         $this->info("Updating Algolia search index (limit: " . $this->_limit() . ")");
@@ -153,7 +153,12 @@ class AlgoliaIndex extends Command
      */
     protected function _indexTweets()
     {
-        $tweets = Twitter::tweets(Util::twitterUsername(), $this->_limit());
+        if ($this->_doIncremental() && Util::lastTweetId()) {
+            $this->info(" - Incremental: getting tweets prior to: " . Util::lastTweetId());
+            $tweets = Twitter::tweets(Util::twitterUsername(), $this->_limit(), Util::lastTweetId());
+        } else {
+            $tweets = Twitter::tweets(Util::twitterUsername(), $this->_limit());
+        }
 
         $this->info("Indexing " . count($tweets) . " tweets");
         foreach ($tweets as $tweet) {
@@ -162,6 +167,7 @@ class AlgoliaIndex extends Command
             $object['url'] = "https://twitter.com/" . Util::twitterUsername() . '/status/' . $tweet->id;
             $object['search_title'] = "Tweet: " . $tweet->text;
             $object['type'] = 'tweet';
+            $object['created_at'] = $tweet->created_at;
             $object['public'] = true;
 
             $this->infoTweet($object);
@@ -171,6 +177,21 @@ class AlgoliaIndex extends Command
             ]);
 
             $this->currentTweetNumber++;
+        }
+
+        if ($this->_doIncremental() && isset($tweet)) {
+            $this->info("Saving last tweet ID: " . $tweet->id);
+            $this->saveLastTweetId($tweet->id);
+        }
+    }
+
+    protected function saveLastTweetId($tweetId)
+    {
+        $path = base_path('.env');
+
+        if (file_exists($path)) {
+            $updated = preg_replace('/TWITTER_LAST_TWEET_ID=\d*/', 'TWITTER_LAST_TWEET_ID=' . $tweetId, file_get_contents($path));
+            file_put_contents($path, $updated);
         }
     }
 
@@ -182,13 +203,13 @@ class AlgoliaIndex extends Command
     {
         $this->info("Indexing downloaded twitter tweets");
 
-        try {
-            $testfile = storage_path('app/tweet.js');
-        } catch (\Exception $e) {
-            $this->error("Didn't find file: " . storage_path('app/tweet.js'));
+        $file = storage_path('app/tweet.js');
+        if (!file_exists($file)) {
+            $this->warn("Didn't find tweet.js file - skipping: " . storage_path('app/tweet.js'));
+            return;
         }
 
-        $listener = new \App\JsonListener(function($data) {
+        $listener = new \App\JsonListener(function ($data) {
             $object = [];
             $object['object_id'] = 'tweet_' . $data['id'];
             $object['url'] = "https://twitter.com/" . Util::twitterUsername() . '/status/' . $data['id'];
@@ -208,7 +229,7 @@ class AlgoliaIndex extends Command
             }
         });
 
-        $stream = fopen($testfile, 'r');
+        $stream = fopen($file, 'r');
         try {
             $parser = new \JsonStreamingParser\Parser($stream, $listener);
             $parser->parse();
@@ -223,6 +244,6 @@ class AlgoliaIndex extends Command
     protected function infoTweet($object)
     {
         $i = $this->currentTweetNumber;
-        $this->info(" - Tweet #$i ({$object['object_id']}): " . $object['search_title']);
+        $this->info(" - #$i ({$object['object_id']}) ({$object['created_at']}): " . $object['search_title']);
     }
 }

@@ -77,7 +77,7 @@ class Twitter
      * @return array
      * @throws \Exception
      */
-    public static function tweets($username, $count)
+    public static function tweets($username, $count, $lastTweetId = null)
     {
         $settings = array(
             'oauth_access_token'        => env('TWITTER_ACCESS_TOKEN'),
@@ -88,6 +88,9 @@ class Twitter
 
         $url = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
         $getfield = "?screen_name=$username&count=$count";
+        if ($lastTweetId) {
+            $getfield .= '&max_id=' . $lastTweetId;
+        }
         $requestMethod = 'GET';
 
         $twitter = new \TwitterAPIExchange($settings);
