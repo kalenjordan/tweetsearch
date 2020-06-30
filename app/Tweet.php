@@ -100,4 +100,34 @@ class Twitter
 
         return json_decode($response);
     }
+
+    /**
+     * @param $screenname
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public static function newTweets($username, $count, $newestTweetId = null)
+    {
+        $settings = array(
+            'oauth_access_token'        => env('TWITTER_ACCESS_TOKEN'),
+            'oauth_access_token_secret' => env('TWITTER_ACCESS_TOKEN_SECRET'),
+            'consumer_key'              => env('TWITTER_CONSUMER_KEY'),
+            'consumer_secret'           => env('TWITTER_CONSUMER_SECRET'),
+        );
+
+        $url = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+        $getfield = "?screen_name=$username&count=$count";
+        if ($newestTweetId) {
+            $getfield .= '&since_id=' . $newestTweetId;
+        }
+        $requestMethod = 'GET';
+
+        $twitter = new \TwitterAPIExchange($settings);
+        $response = $twitter->setGetfield($getfield)
+            ->buildOauth($url, $requestMethod)
+            ->performRequest();
+
+        return json_decode($response);
+    }
 }

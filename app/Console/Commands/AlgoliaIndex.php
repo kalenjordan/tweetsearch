@@ -24,7 +24,7 @@ class AlgoliaIndex extends Command
      *
      * @var string
      */
-    protected $signature = 'algolia:index {--limit=} {--v} {--tables=} {--incremental}';
+    protected $signature = 'algolia:index {--limit=} {--v} {--tables=}';
 
     /**
      * The console command description.
@@ -46,11 +46,6 @@ class AlgoliaIndex extends Command
     protected function _limit()
     {
         return $this->option('limit') ? $this->option('limit') : 5;
-    }
-
-    protected function _doIncremental()
-    {
-        return $this->option('incremental') ? $this->option('incremental') : false;
     }
 
     protected function _tables()
@@ -87,10 +82,11 @@ class AlgoliaIndex extends Command
             $this->_indexDownloadedTwitterData();
         }
 
-        if ($this->shouldIndex('tweets')) {
-            $this->currentTweetNumber = 1;
-            $this->_indexTweets();
-        }
+        $this->currentTweetNumber = 1;
+        $this->_indexOlderTweets();
+
+        $this->currentTweetNumber = 1;
+        $this->_indexNewerTweets();
 
         return;
     }
@@ -151,9 +147,9 @@ class AlgoliaIndex extends Command
      * @throws \Algolia\AlgoliaSearch\Exceptions\MissingObjectId
      * @throws \Exception
      */
-    protected function _indexTweets()
+    protected function _indexOlderTweets()
     {
-        if ($this->_doIncremental() && Util::lastTweetId()) {
+        if (Util::lastTweetId()) {
             $this->info(" - Incremental: getting tweets prior to: " . Util::lastTweetId());
             $tweets = Twitter::tweets(Util::twitterUsername(), $this->_limit(), Util::lastTweetId());
         } else {
@@ -179,7 +175,57 @@ class AlgoliaIndex extends Command
             $this->currentTweetNumber++;
         }
 
-        if ($this->_doIncremental() && isset($tweet)) {
+        if (isset($tweet)) {
+            $this->info("Saving last tweet ID: " . $tweet->id);
+            $this->saveLastTweetId($tweet->id);
+        }
+    }
+
+    /**
+     * @throws \Algolia\AlgoliaSearch\Exceptions\MissingObjectId
+     * @throws \Exception
+     */
+    protected function _indexNewerTweets()
+    {
+        $this->info("Indexing newer tweets");
+        $client = SearchClient::create(Util::algoliaAppId(), Util::algoliaPrivateKey());
+        $index = $client->initIndex('all');
+
+        $index->setSettings([
+            'ranking' => [
+                'desc(object_id)',
+            ]
+        ]);
+
+        $results = $index->search('', [
+            'hitsPerPage' => 1,
+        ]);
+        $firstResult = $results['hits'][0];
+        $tweetId = substr($firstResult['object_id'], 6);
+
+        $this->info(" - Incremental: getting tweets after : " . $tweetId);
+        $tweets = Twitter::newTweets(Util::twitterUsername(), $this->_limit(), $tweetId);
+
+        $this->info("Indexing " . count($tweets) . " tweets");
+        foreach ($tweets as $tweet) {
+            $object = [];
+            $object['object_id'] = 'tweet_' . $tweet->id;
+            $object['url'] = "https://twitter.com/" . Util::twitterUsername() . '/status/' . $tweet->id;
+            $object['search_title'] = "Tweet: " . $tweet->text;
+            $object['type'] = 'tweet';
+            $object['created_at'] = $tweet->created_at;
+            $object['public'] = true;
+
+            $this->infoTweet($object);
+
+            $this->index->saveObjects([$object], [
+                'objectIDKey' => 'object_id',
+            ]);
+
+            $this->currentTweetNumber++;
+        }
+
+        if (isset($tweet)) {
             $this->info("Saving last tweet ID: " . $tweet->id);
             $this->saveLastTweetId($tweet->id);
         }
